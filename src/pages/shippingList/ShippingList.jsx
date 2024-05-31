@@ -4,14 +4,49 @@ import Datatable from "../../components/datatable/Datatable";
 import Navbar from "../../components/navbar/Navbar";
 import Sidebar from "../../components/sidebar/Sidebar";
 import { backendLink } from "../../lib/data";
+import { useNavigate } from "react-router-dom";
 import "./list.scss";
 
 const ShippingList = ({ columns }) => {
+  const navigate = useNavigate();
   const [userData, setUserData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchValue, setSearchValue] = useState("");
+  const [userRole, setUserRole] = useState("");
+  useEffect(() => {
+    if (userRole === "" || !userRole) {
+      const courier = localStorage.getItem("courier");
+      if (courier) {
+        setUserRole(courier);
+      }
+      if (!courier) {
+        navigate("/login");
+      }
+    }
+  }, [userRole, navigate]);
 
-  const getAllUsers = async () => {
+  // const getAllUsers = async () => {
+  //   try {
+  //     setIsLoading(true);
+  //     // const user = JSON.parse(localStorage.getItem("user"));
+  //     const response = await fetch(
+  //       `${backendLink}/api/shipping/view-adminShippings`
+  //     );
+  //     if (!response.ok) {
+  //       toast.error("Something Went Wrong");
+  //     } else {
+  //       const shippings = await response.json();
+  //       console.log(shippings);
+  //       setUserData(shippings?.data || []);
+  //     }
+  //     setIsLoading(false);
+  //   } catch (error) {
+  //     setIsLoading(false);
+  //     console.log(error);
+  //   }
+  // };
+
+  const getAllUsers = async (userRole) => {
     try {
       setIsLoading(true);
       // const user = JSON.parse(localStorage.getItem("user"));
@@ -22,8 +57,32 @@ const ShippingList = ({ columns }) => {
         toast.error("Something Went Wrong");
       } else {
         const shippings = await response.json();
-        console.log(shippings);
-        setUserData(shippings?.data || []);
+        let filteredData = [];
+
+        switch (userRole) {
+          case "dhl":
+            filteredData = shippings?.data?.filter(
+              (shipping) => shipping.brand === "DHL"
+            );
+
+            console.log("");
+            break;
+          case "tcs":
+            filteredData = shippings?.data?.filter(
+              (shipping) => shipping.brand === "TCS"
+            );
+            break;
+          case "leopards":
+            filteredData = shippings?.data?.filter(
+              (shipping) => shipping.brand === "Leopards"
+            );
+            break;
+          default:
+            filteredData = shippings?.data || [];
+            break;
+        }
+
+        setUserData(filteredData);
       }
       setIsLoading(false);
     } catch (error) {
@@ -31,11 +90,12 @@ const ShippingList = ({ columns }) => {
       console.log(error);
     }
   };
+
   useEffect(() => {
     if (!userData || userData.length === 0) {
-      getAllUsers();
+      getAllUsers(userRole);
     }
-  }, [userData]);
+  }, [userData, userRole]);
 
   useEffect(() => {
     const searchShipping = async () => {

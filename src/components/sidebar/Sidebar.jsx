@@ -5,8 +5,10 @@ import { useContext } from "react";
 import { Link } from "react-router-dom";
 import { DarkModeContext } from "../../context/darkModeContext";
 import "./sidebar.scss";
+import { useNavigate } from "react-router-dom";
 
 const Sidebar = () => {
+  const navigate = useNavigate();
   const { dispatch } = useContext(DarkModeContext);
   return (
     <div className="sidebar">
@@ -33,7 +35,12 @@ const Sidebar = () => {
               <span>Shippings</span>
             </li>
           </Link>
-          <li>
+          <li
+            onClick={() => {
+              localStorage.removeItem("courier");
+              navigate("/login");
+            }}
+          >
             <ExitToAppIcon className="icon" />
             <span>Logout</span>
           </li>

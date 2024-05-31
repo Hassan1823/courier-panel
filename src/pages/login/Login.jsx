@@ -1,19 +1,31 @@
 import axios from "axios";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 // import { AuthContext } from "../../context/AuthContext";
 import "./login.scss";
+import { toast } from "react-toastify";
 
 const Login = () => {
+  const navigate = useNavigate();
   const [credentials, setCredentials] = useState({
     username: undefined,
     password: undefined,
   });
 
-  const { loading, error, dispatch } = useContext(AuthContext);
+  const [userData, setUserData] = useState("");
 
-  const navigate = useNavigate();
+  useEffect(() => {
+    if (!userData || userData === "") {
+      const user = JSON.parse(localStorage.getItem("courier"));
+      if (user && user !== "") {
+        navigate("/");
+        setUserData(user);
+      }
+    }
+  }, [userData, navigate]);
+
+  const { loading, error, dispatch } = useContext(AuthContext);
 
   const handleChange = (e) => {
     setCredentials((prev) => ({ ...prev, [e.target.id]: e.target.value }));
@@ -21,21 +33,33 @@ const Login = () => {
 
   const handleClick = async (e) => {
     e.preventDefault();
-    dispatch({ type: "LOGIN_START" });
     try {
-      const res = await axios.post("/auth/login", credentials);
-      if (res.data.isAdmin) {
-        dispatch({ type: "LOGIN_SUCCESS", payload: res.data.details });
-
-        navigate("/");
+      if (credentials.username && credentials.password !== undefined) {
+        if (
+          credentials.username === "tcs" &&
+          credentials.password === "tcs123"
+        ) {
+          localStorage.setItem("courier", "tcs");
+        } else if (
+          credentials.username === "dhl" &&
+          credentials.password === "dhl123"
+        ) {
+          localStorage.setItem("courier", "dhl");
+        } else if (
+          credentials.username === "leopards" &&
+          credentials.password === "leopards123"
+        ) {
+          localStorage.setItem("courier", "leopards");
+        } else {
+          return toast.error("Wrong Credentials");
+        }
+        toast.success("Successfully Logged In");
+        navigate("/shipping");
       } else {
-        dispatch({
-          type: "LOGIN_FAILURE",
-          payload: { message: "You are not allowed!" },
-        });
+        toast.error("Some Thing Went Wrong");
       }
-    } catch (err) {
-      dispatch({ type: "LOGIN_FAILURE", payload: err.response.data });
+    } catch (error) {
+      console.log(error);
     }
   };
 
